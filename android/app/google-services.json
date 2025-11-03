@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "944342256169",
+    "project_id": "fluttergsdisplay",
+    "storage_bucket": "fluttergsdisplay.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:944342256169:android:4f0b6ef8706e947ebcea38",
+        "android_client_info": {
+          "package_name": "com.example.gs_display"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCtIymFK3pD9CeA3JxN3VuZGMn1awrbk9E"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

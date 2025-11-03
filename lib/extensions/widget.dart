@@ -62,6 +62,10 @@ extension DecorationExtensions on Widget {
     decoration: BoxDecoration(border: Border.all(color: color, width: width)),
     child: this,
   );
+  Widget withBorderWhite({Color color = Colors.white, double width = 1.0}) => Container(
+    decoration: BoxDecoration(border: Border.all(color: color, width: width)),
+    child: this,
+  );
 }
 
 // ------------------ Flex Extensions ------------------

@@ -39,6 +39,9 @@ dependencies:
   marquee: ^2.2.0
   auto_size_text: ^3.0.0
 
+  firebase_core: ^3.0.0
+  firebase_crashlytics: ^4.0.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

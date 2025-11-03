@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'ResponsiveMarqueeText.dart';
-import 'ResponsiveTextRow .dart';
+import 'AdaptiveIconTextBox.dart';
 import 'config/tokens.dart';
 import 'extensions/widget.dart';
 
@@ -13,9 +13,17 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/status.dart' as status;
 
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+import 'services/firebase_crash_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  await FirebaseCrashService().init();
 
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
   runApp(const MyApp());
@@ -29,7 +37,9 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Live Display',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData.dark(),
+
+      theme: ThemeData.dark().copyWith(scaffoldBackgroundColor: Colors.black),
+
       home: const HomeScreen(),
     );
   }
@@ -324,6 +334,8 @@ class _MainScreenState extends State<MainScreen> {
       print('❌ Stack: $stackTrace');
       print('❌ ================================================');
 
+      await FirebaseCrashService().recordSocketError(e);
+
       if (mounted) {
         setState(() {
           isConnected = false;
@@ -465,13 +477,14 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     // 在 build 中只保留需要運行時計算的變數
-    final marqueeColor = "#FFE08A".toColor();
-    final dateTimeColor = "#4C8BF5".toColor();
+    final marqueeColor = "#f1c100".toColor();
+    final dateTimeColor = "#02dac5".toColor();
 
     return Scaffold(
       body: SafeArea(
         child: Stack(
           children: [
+            // AlertScreen(values: ['1', 'a', 'd', 'f'], userID: 'testAccount'),
             showAlert
                 ? AlertScreen(values: alertValues, userID: userID)
                 : _buildMainScreen(marqueeColor, dateTimeColor),
@@ -512,42 +525,6 @@ class _MainScreenState extends State<MainScreen> {
                 ],
               ),
             ).mr(_indicatorSpacing),
-            // Text(
-            //   statusText,
-            //   style: const TextStyle(
-            //     fontSize: _statusFontSize,
-            //     color: Colors.white,
-            //     fontWeight: FontWeight.bold,
-            //   ),
-            // ).mr(_indicatorSpacing),
-            // if (!isConnected && errorText.isNotEmpty)
-            //   ElevatedButton(
-            //     child: Text('error'),
-            //     onPressed: () {
-            //       showDialog(
-            //         context: context,
-            //         builder: (BuildContext context) {
-            //           return AlertDialog(
-            //             title: Text('Error'),
-            //             content: Text(errorText,
-            //                 style: const TextStyle(
-            //                   fontSize: _errorFontSize,
-            //                   color: Color(0xFFFF6B6B),
-            //                 ),
-            //             ),
-            //             actions: [
-            //               TextButton(
-            //                 child: Text('close'),
-            //                 onPressed: () {
-            //                   Navigator.of(context).pop();
-            //                 },
-            //               )
-            //             ],
-            //           );
-            //         }
-            //       );
-            //     },
-            //   )
           ],
         ),
       ),
@@ -559,7 +536,7 @@ class _MainScreenState extends State<MainScreen> {
     String tableNumber = widget.tableName.replaceAll('Table', '');
     tableNumber = tableNumber.length == 1 ? '0$tableNumber' : tableNumber;
 
-    double _marqueeHeight = MediaQuery.of(context).size.height * 0.23;
+    double _marqueeHeight = MediaQuery.of(context).size.height * 0.2;
 
     final FontWeight dateTimeFontWeight = FontWeight.w900;
 
@@ -571,11 +548,11 @@ class _MainScreenState extends State<MainScreen> {
           width: MediaQuery.of(context).size.width,
           height: _marqueeHeight,
           padding: EdgeInsets.all(0),
-          backgroundColor: _marqueeContainerBg,
           textColor: marqueeColor,
           blankSpace: _marqueeBlankSpace,
           velocity: _marqueeVelocity,
-        ).mb(10),
+            fontWeight: dateTimeFontWeight
+        ),
 
         // 主要顯示區域
         Row(
@@ -583,44 +560,31 @@ class _MainScreenState extends State<MainScreen> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             // 左側：桌號
-            ResponsiveTextRow(
-              text: tableNumber,
-              textColor: Colors.white,
-              fontWeight: dateTimeFontWeight,
-            ).flex(35),
+            AdaptiveIconTextBox(
+              textLines: [
+                tableNumber
+              ],
+              textColor: '#ffffff'.toColor(),
+              fontWeight: FontWeight.w300,
+            ).flex(30),
 
             // 右側：時間
             Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Flexible(
-                  flex: 1,
-                  child: ResponsiveTextRow(
-                    text: currentDate,
-                    textColor: dateTimeColor,
-                    fontWeight: dateTimeFontWeight,
-                  ),
-                ),
-                Flexible(
-                  flex: 1,
-                  child: ResponsiveTextRow(
-                    text: currentTime,
-                    textColor: dateTimeColor,
-                    fontWeight: dateTimeFontWeight,
-                  ),
-                ),
-                Flexible(
-                  flex: 1,
-                  child: ResponsiveTextRow(
-                    text: 'GMT+8',
-                    textColor: dateTimeColor,
-                    fontWeight: dateTimeFontWeight,
-                  ),
-                ),
+                AdaptiveIconTextBox(
+                  textLines: [
+                    currentDate,
+                    currentTime,
+                    'GMT+8'
+                  ],
+                  textColor: dateTimeColor,
+                  fontWeight: dateTimeFontWeight,
+                ).flex()
               ],
-            ).flex(65),
+            ).ml(MediaQuery.of(context).size.width * 0.02).flex(70),
           ],
-        ).flex(),
+        ).px(MediaQuery.of(context).size.width * 0.02).flex(),
       ],
     );
   }
@@ -638,7 +602,7 @@ class AlertScreen extends StatelessWidget {
   });
 
   //
-  static const Color _bgColor = Colors.black87;
+  static const Color _bgColor = Colors.black;
   static const Color _userBgColor = Color.fromRGBO(255, 255, 255, 0.1);
   static const Color _white = Colors.white;
 
@@ -663,7 +627,7 @@ class AlertScreen extends StatelessWidget {
         softWrap: false,
         style: const TextStyle(
           height: _textHeight,
-          fontWeight: FontWeight.w700,
+          fontWeight: FontWeight.w900,
           color: _white,
         ),
       ).mt(1),
@@ -681,7 +645,7 @@ class AlertScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // 在 build 方法內只宣告會變化的局部變數
-    final accentColor = "#FFE08A".toColor();
+    final accentColor = "#f1c100".toColor();
     double _userContainerHeight = MediaQuery.of(context).size.height * 0.23;
 
     return Container(
@@ -697,15 +661,15 @@ class AlertScreen extends StatelessWidget {
               width: double.infinity,
               height: _userContainerHeight,
               color: _userBgColor,
-              child: ResponsiveTextRow(
-                text: userID,
-                fontWeight: FontWeight.w900,
+              child:  AdaptiveIconTextBox(
+                textLines: [
+                  userID
+                ],
                 textColor: accentColor,
+                fontWeight: FontWeight.w900,
 
                 icon: Icons.person,
-                iconColor: accentColor,
-                iconSpacing: _iconMargin,
-              ),
+              )
             ),
 
             // 顯示值
