@@ -618,6 +618,7 @@ class AlertScreen extends StatelessWidget {
 
   //
   static final RegExp _digitPattern = RegExp(r'^[0-9]$');
+  static final RegExp _allowedLetterPattern = RegExp(r'^[a-l]$');
 
   //
   Widget _buildDigitWidget(String value) {
@@ -636,7 +637,6 @@ class AlertScreen extends StatelessWidget {
     ).aspectRatio(1).flex(1);
   }
 
-  //
   Widget _buildImageWidget(String imageName) {
     return Image.asset(
       'assets/images/$imageName.png',
@@ -681,7 +681,9 @@ class AlertScreen extends StatelessWidget {
                 // 使用快取的 RegExp
                 return _digitPattern.hasMatch(v)
                     ? _buildDigitWidget(v)
-                    : _buildImageWidget(v);
+                    : _allowedLetterPattern.hasMatch(v)
+                      ? _buildImageWidget(v)
+                      : Container().aspectRatio(1).flex(1);
               }).toList(),
             ).px(MediaQuery.of(context).size.width * 0.02).flex(),
           ],
