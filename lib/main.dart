@@ -247,6 +247,7 @@ class _MainScreenState extends State<MainScreen> {
   // ==================== Socket 相關變數 ====================
   late WebSocketChannel channel;
   io.WebSocket? rawSocket;
+  StreamSubscription? _streamSubscription;
   Timer? _heartbeatTimer;
   Timer? _reconnectTimer;
 
@@ -284,6 +285,18 @@ class _MainScreenState extends State<MainScreen> {
   Future<void> _connectWebSocket() async {
     if (!mounted) return;
 
+    // 在建立新連線前，先安全地取消舊的訂閱和關閉舊的 Socket
+    print('🧹 清理舊的連線資源...');
+    await _streamSubscription?.cancel();
+    _streamSubscription = null;
+    // 嘗試關閉，忽略過程中可能發生的錯誤
+    try {
+      await rawSocket?.close();
+    } catch (_) {
+      // 忽略關閉舊 Socket 時可能發生的錯誤，因為我們正要建立新的
+    }
+    rawSocket = null;
+
     final uri = Uri.parse('wss://$_hostname:$_port/${widget.token}');
 
     print('🔗 ==================== 連線資訊 ====================');
@@ -317,7 +330,7 @@ class _MainScreenState extends State<MainScreen> {
       channel = IOWebSocketChannel(rawSocket!);
 
       // 設置訊息監聽
-      channel.stream.listen(
+      _streamSubscription = channel.stream.listen(
             (message) => _handleMessage(message),
         onDone: () => _handleDisconnect(),
         onError: (e) => _handleError(e),
@@ -469,6 +482,8 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   void dispose() {
+    print('🛑 MainScreen Dispose: 正在清理所有資源...');
+    _streamSubscription?.cancel(); //
     _timer?.cancel();
     _heartbeatTimer?.cancel();
     _reconnectTimer?.cancel();
