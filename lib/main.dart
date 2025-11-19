@@ -348,6 +348,7 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   void _handleMessage(dynamic message) {
+    if(message == '') return;
     if (!isConnected && mounted) {
       setState(() {
         isConnected = true;
@@ -422,7 +423,8 @@ class _MainScreenState extends State<MainScreen> {
       if (isConnected && mounted) {
         try {
           final heartbeat = jsonEncode({
-            "ping": DateTime.now().millisecondsSinceEpoch
+            'action': 'ping',
+            'timestamp': DateTime.now().millisecondsSinceEpoch
           });
           channel.sink.add(heartbeat);
           print('💓 Heartbeat sent');
