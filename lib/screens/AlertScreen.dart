@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
-import 'extensions/widget.dart';
-import 'AdaptiveIconTextBox.dart';
+import '../extensions/widget.dart';
+
+import '../widgets/FittedIconTextBox.dart';
 
 // ⚠️ Alert 畫面 ================================================
 class AlertScreen extends StatelessWidget {
@@ -70,10 +71,10 @@ class AlertScreen extends StatelessWidget {
                 width: double.infinity,
                 height: _userContainerHeight,
                 color: _userBgColor,
-                child:  AdaptiveIconTextBox(
-                  textLines: [
+                child:  FittedIconTextBox(
+                  textLinesNotifier: ValueNotifier([
                     userID
-                  ],
+                  ]),
                   textColor: accentColor,
                   fontWeight: FontWeight.w900,
 
