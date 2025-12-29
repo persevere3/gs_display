@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:gs_display/widgets/PerformanceMonitorLarge.dart';
 import 'package:gs_display/services/WebSocketManager.dart';
 
+import 'config/timeZones.dart';
 import 'screens/AlertScreen.dart';
 import 'widgets/ResponsiveMarqueeText.dart';
 import 'widgets/FittedIconTextBox.dart';
@@ -60,6 +61,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController marqueeController = TextEditingController();
   String? selectedTable;
+  String? selectedTimeZone;
 
   // 常量定義
   static const Color _white = Colors.white;
@@ -75,8 +77,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _goToMain() {
-    if (selectedTable == null || marqueeController.text.isEmpty) return;
+    if (selectedTable == null || marqueeController.text.isEmpty || selectedTimeZone == null) return;
     final token = TokenConfig.tokenMap[selectedTable]!;
+    final timeZone = TimeZoneConfig.timeZoneMap[selectedTimeZone]!;
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
@@ -84,6 +87,8 @@ class _HomeScreenState extends State<HomeScreen> {
           tableName: selectedTable!,
           token: token,
           marqueeText: marqueeController.text,
+          timeZoneName: selectedTimeZone!,
+          timeZone: timeZone
         ),
       ),
     );
@@ -179,6 +184,37 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
 
+                    // TimeZone 下拉選單
+                    Container(
+                      height: fieldHeight,
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      margin: EdgeInsets.only(bottom: spacing),
+                      decoration: BoxDecoration(
+                        color: inputBg,
+                        borderRadius: borderRadius,
+                        border: Border.all(color: borderColor, width: 2),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          value: selectedTimeZone,
+                          hint: Text(
+                            "Time Zone",
+                            style: TextStyle(color: hintColor),
+                          ),
+                          style: textStyle,
+                          isExpanded: true,
+                          onChanged: (v) => setState(() => selectedTimeZone = v),
+                          items: TimeZoneConfig.timeZoneMap.keys
+                              .map((k) => DropdownMenuItem(
+                            value: k,
+                            child: Text(k),
+                          ))
+                              .toList(),
+                        ),
+                      ),
+                    ),
+
+
                     // Setting 按鈕
                     ElevatedButton(
                       onPressed: _goToMain,
@@ -213,12 +249,16 @@ class MainScreen extends StatefulWidget {
   final String tableName;
   final String token;
   final String marqueeText;
+  final String timeZoneName;
+  final int timeZone;
 
   const MainScreen({
     super.key,
     required this.tableName,
     required this.token,
     required this.marqueeText,
+    required this.timeZoneName,
+    required this.timeZone
   });
 
   @override
@@ -229,7 +269,6 @@ class _MainScreenState extends State<MainScreen> {
   // ==================== 靜態常量 ====================
   static const String _hostname = 'live.me3kb78d.com';
   static const int _port = 2087;
-  static const Duration _gmtPlus8Offset = Duration(hours: 8);
   static const Duration _alertDuration = Duration(seconds: 5);
   static const double _marqueeBlankSpace = 200.0;
   static const double _marqueeVelocity = 50.0;
@@ -318,11 +357,11 @@ class _MainScreenState extends State<MainScreen> {
 
   /// 獲取當前時間列表
   List<String> _getCurrentTimeList() {
-    final now = DateTime.now().toUtc().add(_gmtPlus8Offset);
+    final now = DateTime.now().toUtc().add(Duration(hours: widget.timeZone));
     return [
       "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}",
       "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')}",
-      'GMT+8',
+      widget.timeZoneName,
     ];
   }
 
@@ -383,7 +422,7 @@ class _MainScreenState extends State<MainScreen> {
             _buildConnectionIndicator(context),
 
             // 性能監控面板 (右下角)
-            PerformanceMonitorLarge()
+            // PerformanceMonitorLarge()
           ],
         ),
       ),
