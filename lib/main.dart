@@ -17,6 +17,8 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/status.dart' as status;
 
+import 'package:google_fonts/google_fonts.dart';
+
 
 // import 'package:firebase_core/firebase_core.dart';
 // import 'firebase_options.dart';
@@ -43,7 +45,13 @@ class MyApp extends StatelessWidget {
       title: 'Live Display',
       debugShowCheckedModeBanner: false,
 
-      theme: ThemeData.dark().copyWith(scaffoldBackgroundColor: Colors.black),
+      theme: ThemeData.dark().copyWith(
+        scaffoldBackgroundColor: Colors.black,
+        textTheme: GoogleFonts.getTextTheme(
+          'Noto Sans SC',
+          ThemeData.dark().textTheme,
+        ),
+      ),
 
       home: const HomeScreen(),
     );
